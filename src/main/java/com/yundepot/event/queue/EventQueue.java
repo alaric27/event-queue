@@ -4,6 +4,7 @@ import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
 import com.yundepot.event.queue.broker.RingBuffer;
 import com.yundepot.event.queue.broker.WaitStrategy;
+import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.consumer.*;
 import com.yundepot.event.queue.producer.DefaultProducer;
 import com.yundepot.event.queue.producer.EventTranslator;
@@ -25,7 +26,7 @@ public class EventQueue<T> {
 
 
     public EventQueue(RingBuffer<T> ringBuffer, WaitStrategy waitStrategy) {
-        // todo broker consumer producer直接的初始化关系
+        // todo broker consumer producer 之间的初始化关系
         this.broker = new DefaultBroker<>(ringBuffer, waitStrategy);
         this.producer = new DefaultProducer<>();
         consumerList = new ArrayList<>();
@@ -38,8 +39,9 @@ public class EventQueue<T> {
     private EventHandlerGroup<T> createConsumers(EventHandler<? super T>[] handlers) {
         checkNotStarted();
         for (int i = 0; i < handlers.length; i++) {
-            consumerList.add(new DefaultConsumer<T>(handlers[i], broker));
+            consumerList.add(new DefaultConsumer<T>(handlers[i], broker, new SequenceBarrier(broker, new Sequence[]{broker.getCursorSequence()})));
         }
+        // todo 支持事件关系 or and then 等
         return null;
     }
 
@@ -48,9 +50,7 @@ public class EventQueue<T> {
         if (!started.compareAndSet(false, true)) {
             throw new IllegalStateException("EventQueue.start() must only be called once.");
         }
-        // todo 消费者序列号依赖如何正确添加
-//        broker.addConsumerSequences(consumerList.stream().map(Consumer::getSequence).toArray(Sequence[]::new));
-        broker.addConsumerSequences(null);
+        broker.addConsumerSequences(consumerList.stream().map(Consumer::getSequence).toArray(Sequence[]::new));
         producer.setBroker(broker);
         consumerList.forEach(consumer -> consumer.start());
     }

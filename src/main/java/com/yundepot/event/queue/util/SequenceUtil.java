@@ -12,24 +12,25 @@ import static java.util.Arrays.copyOf;
  * @date 2024/6/14  10:00
  */
 public class SequenceUtil {
-    public static <T> void addSequences(final T holder, final AtomicReferenceFieldUpdater<T, Sequence[]> updater,
-                                        final long producerSequence, final Sequence... sequencesToAdd) {
+    public static <T> void addSequences(final T holder, final AtomicReferenceFieldUpdater<T, Sequence[]> updater, final Sequence cursor, final Sequence... sequencesToAdd) {
+        long cursorSequence;
         Sequence[] updatedSequences;
         Sequence[] currentSequences;
         do {
             currentSequences = updater.get(holder);
             updatedSequences = copyOf(currentSequences, currentSequences.length + sequencesToAdd.length);
+            cursorSequence = cursor.get();
 
             int index = currentSequences.length;
             for (Sequence sequence : sequencesToAdd) {
-                sequence.set(producerSequence);
+                sequence.set(cursorSequence);
                 updatedSequences[index++] = sequence;
             }
-        }
-        while (!updater.compareAndSet(holder, currentSequences, updatedSequences));
+        } while (!updater.compareAndSet(holder, currentSequences, updatedSequences));
 
+        cursorSequence = cursor.get();
         for (Sequence sequence : sequencesToAdd) {
-            sequence.set(producerSequence);
+            sequence.set(cursorSequence);
         }
     }
 
@@ -81,14 +82,6 @@ public class SequenceUtil {
         }
         return minSequence;
     }
-
-    /**
-     * 获取一组序列的最小值
-     */
-    public static long getMinSequence(Sequence sequence, long defaultValue) {
-        return Math.min(sequence.get(), defaultValue);
-    }
-
 
     /**
      * 求2的对数

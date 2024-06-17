@@ -14,11 +14,6 @@ public interface Broker<T> {
     T get(long sequence);
 
     /**
-     * 等待其他序列,返回最大的可消费序号
-     */
-    long waitFor(long sequence) throws Exception;
-
-    /**
      * 通知消费者可消费
      */
     void signalAllWhenBlocking();
@@ -28,6 +23,10 @@ public interface Broker<T> {
      */
     long getCursor();
 
+    /**
+     * 获取序号
+     */
+    Sequence getCursorSequence();
 
     /**
      * 获得下一个可用的生产者序列值, 获取不到会等待
@@ -73,4 +72,14 @@ public interface Broker<T> {
      * 添加消费者进度
      */
     void addConsumerSequences(Sequence... consumerSequences);
+
+    /**
+     * 删除消费者进度
+     */
+    boolean removeConsumerSequence(Sequence sequence);
+
+    /**
+     * 获取等待策略
+     */
+    WaitStrategy getWaitStrategy();
 }

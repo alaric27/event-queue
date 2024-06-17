@@ -1,14 +1,13 @@
 package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.common.CapacityException;
-import com.yundepot.event.queue.common.FixedSequenceGroup;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.SequenceUtil;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -29,8 +28,9 @@ public class DefaultBroker<T> implements Broker {
     protected final Sequence cursor = new Sequence(Sequence.INITIAL_VALUE);
 
     private final WaitStrategy waitStrategy;
-    private Sequence dependentSequence;
-
+    private volatile Sequence[] consumerSequences = new Sequence[0];
+    private static final AtomicReferenceFieldUpdater<DefaultBroker, Sequence[]> SEQUENCE_UPDATER =
+            AtomicReferenceFieldUpdater.newUpdater(DefaultBroker.class, Sequence[].class, "consumerSequences");
 
     /**
      * 缓存消费进度，避免多次计算
@@ -55,18 +55,6 @@ public class DefaultBroker<T> implements Broker {
         return ringBuffer.get(sequence);
     }
 
-    /**
-     * 等待其他序列,返回最大的可消费队列
-     */
-    @Override
-    public long waitFor(long sequence) throws Exception {
-        long availableSequence = waitStrategy.waitFor(sequence, cursor, dependentSequence);
-        if (availableSequence < sequence) {
-            return availableSequence;
-        }
-        return getHighestPublishedSequence(sequence, availableSequence);
-    }
-
     @Override
     public void signalAllWhenBlocking() {
         waitStrategy.signalAllWhenBlocking();
@@ -75,6 +63,11 @@ public class DefaultBroker<T> implements Broker {
     @Override
     public long getCursor() {
         return cursor.get();
+    }
+
+    @Override
+    public Sequence getCursorSequence() {
+        return cursor;
     }
 
     @Override
@@ -118,7 +111,6 @@ public class DefaultBroker<T> implements Broker {
     public void publish(long sequence) {
         setPublished(sequence);
         waitStrategy.signalAllWhenBlocking();
-
     }
 
     @Override
@@ -151,12 +143,17 @@ public class DefaultBroker<T> implements Broker {
 
     @Override
     public void addConsumerSequences(Sequence... consumerSequences) {
-        // 如果没设置依赖的消费者，则只依赖生产者进度
-        if (Objects.isNull(consumerSequences) || consumerSequences.length == 0) {
-            dependentSequence = cursor;
-        } else {
-            dependentSequence = new FixedSequenceGroup(consumerSequences);
-        }
+        SequenceUtil.addSequences(this, SEQUENCE_UPDATER, cursor, consumerSequences);
+    }
+
+    @Override
+    public boolean removeConsumerSequence(Sequence sequence) {
+        return SequenceUtil.removeSequence(this, SEQUENCE_UPDATER, sequence);
+    }
+
+    @Override
+    public WaitStrategy getWaitStrategy() {
+        return this.waitStrategy;
     }
 
     private boolean hasAvailableCapacity(long next, long current) {
@@ -166,7 +163,7 @@ public class DefaultBroker<T> implements Broker {
 
         //  判断wrapPoint是否大于上一次计算时消费者的最小值, 如果大于则进行一次从新计算判断，否则直接后续赋值操作
         if (wrapPoint > cachedConsumerSequence) {
-            long minSequence = SequenceUtil.getMinSequence(dependentSequence, current);
+            long minSequence = SequenceUtil.getMinSequence(consumerSequences, current);
             consumerSequenceCache.set(minSequence);
             if (wrapPoint > minSequence) {
                 return false;

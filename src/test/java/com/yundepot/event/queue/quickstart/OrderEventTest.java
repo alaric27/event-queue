@@ -16,13 +16,9 @@ public class OrderEventTest {
         eventQueue.handleEvents(new OrderEventHandler());
         eventQueue.start();
 
-        final long a = 4;
-        for (int i = 0; i < 10; i++) {
-            eventQueue.publishEvent((orderEvent, sequence) -> {
-                orderEvent.setValue(a);
-            });
-        }
-
+        eventQueue.publishEvent((orderEvent, sequence) -> {
+            orderEvent.setValue(1L);
+        });
         LockSupport.park();
     }
 }

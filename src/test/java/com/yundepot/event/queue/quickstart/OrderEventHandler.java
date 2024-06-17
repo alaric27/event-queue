@@ -9,7 +9,7 @@ import com.yundepot.event.queue.consumer.EventHandler;
 public class OrderEventHandler implements EventHandler<OrderEvent> {
     @Override
     public void onEvent(OrderEvent event, long sequence) throws Exception {
-        System.out.println("OrderEventHandler" + event.getValue() + "  " + sequence);
+        System.out.println("OrderEventHandler value = " + event.getValue() + "  " + sequence);
     }
 
     @Override

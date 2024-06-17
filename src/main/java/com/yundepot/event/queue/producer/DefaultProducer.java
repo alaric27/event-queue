@@ -10,7 +10,8 @@ public class DefaultProducer<T> implements Producer<T> {
 
     private Broker<T> broker;
 
-    // todo 功能差分到broker后过于薄弱， 单生产者如何实现
+    // todo 功能差分到broker后功能过于单薄， 单生产者如何实现
+    // broker 有些功能是否应该划分到producer
 
     @Override
     public long next() {

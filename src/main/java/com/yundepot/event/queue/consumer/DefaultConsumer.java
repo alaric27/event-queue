@@ -28,13 +28,15 @@ public class DefaultConsumer<T> implements Consumer {
     private final AtomicInteger running = new AtomicInteger(IDLE);
     private ThreadFactory threadFactory = DaemonThreadFactory.INSTANCE;
     private Broker<T> broker;
+    private SequenceBarrier sequenceBarrier;
 
     // 异常处理器
     private final ExceptionHandler<T> exceptionHandler = new DefaultExceptionHandler<>();
 
-    public DefaultConsumer(EventHandler eventHandler, Broker broker) {
+    public DefaultConsumer(EventHandler eventHandler, Broker broker, SequenceBarrier sequenceBarrier) {
         this.eventHandler = eventHandler;
         this.broker = broker;
+        this.sequenceBarrier = sequenceBarrier;
     }
 
     @Override
@@ -86,7 +88,7 @@ public class DefaultConsumer<T> implements Consumer {
                     return;
                 }
 
-                final long availableSequence = broker.waitFor(nextSequence);
+                final long availableSequence = sequenceBarrier.waitFor(nextSequence);
                 final long endOfBatchSequence = min(nextSequence + batchSize, availableSequence);
                 // 循环处理事件
                 while (nextSequence <= endOfBatchSequence) {
