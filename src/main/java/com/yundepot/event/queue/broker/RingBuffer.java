@@ -1,4 +1,4 @@
-package com.yundepot.event.queue;
+package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.util.SequenceUtil;
 

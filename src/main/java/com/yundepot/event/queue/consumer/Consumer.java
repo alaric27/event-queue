@@ -1,6 +1,6 @@
 package com.yundepot.event.queue.consumer;
 
-import com.yundepot.event.queue.Sequence;
+import com.yundepot.event.queue.common.Sequence;
 
 
 /**
@@ -18,4 +18,9 @@ public interface Consumer {
      * 启动
      */
     void start();
+
+    /**
+     *  停止
+     */
+    void showdown();
 }

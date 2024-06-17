@@ -1,7 +1,7 @@
 package com.yundepot.event.queue.util;
 
 
-import com.yundepot.event.queue.Sequence;
+import com.yundepot.event.queue.common.Sequence;
 
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
@@ -81,6 +81,14 @@ public class SequenceUtil {
         }
         return minSequence;
     }
+
+    /**
+     * 获取一组序列的最小值
+     */
+    public static long getMinSequence(Sequence sequence, long defaultValue) {
+        return Math.min(sequence.get(), defaultValue);
+    }
+
 
     /**
      * 求2的对数

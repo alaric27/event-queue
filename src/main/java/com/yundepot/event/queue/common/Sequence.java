@@ -1,6 +1,6 @@
-package com.yundepot.event.queue;
+package com.yundepot.event.queue.common;
 
-import jdk.internal.vm.annotation.Contended;
+//import jdk.internal.vm.annotation.Contended;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -13,7 +13,7 @@ import java.lang.invoke.VarHandle;
  */
 public class Sequence {
     // 消除伪共享
-    @Contended
+//    @Contended
     private long value;
 
     public static final long INITIAL_VALUE = -1L;

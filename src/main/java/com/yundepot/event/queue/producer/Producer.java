@@ -1,6 +1,6 @@
 package com.yundepot.event.queue.producer;
 
-import com.yundepot.event.queue.Sequence;
+import com.yundepot.event.queue.broker.Broker;
 
 /**
  * 生产者
@@ -40,37 +40,14 @@ public interface Producer<T> {
     void publish(long lo, long hi);
 
     /**
-     * 获取缓冲区大小
-     */
-    int getBufferSize();
-
-    /**
      * 获取指定序列值
      */
     T get(long sequence);
 
     /**
-     * 获取最小消费者进度
+     * 直接发布事件
      */
-    long getMinConsumerSequence();
+    void publishEvent(final EventTranslator<T> translator);
 
-    /**
-     * 新增消费者进度
-     */
-    void addConsumerSequences(Sequence... consumerSequences);
-
-    /**
-     * 删除消费者进度
-     */
-    boolean removeConsumerSequence(Sequence sequence);
-
-    /**
-     * 判断某个序列是否已发布，可消费
-     */
-    public boolean canConsume(long sequence);
-
-    /**
-     * 获取区间内已发布的最大sequence
-     */
-    long getHighestPublishedSequence(long lo, long hi);
+    void setBroker(Broker<T> broker);
 }
