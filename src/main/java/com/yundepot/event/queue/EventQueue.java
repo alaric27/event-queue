@@ -3,7 +3,7 @@ package com.yundepot.event.queue;
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
 import com.yundepot.event.queue.broker.RingBuffer;
-import com.yundepot.event.queue.broker.WaitStrategy;
+import com.yundepot.event.queue.consumer.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.consumer.*;
 import com.yundepot.event.queue.producer.DefaultProducer;

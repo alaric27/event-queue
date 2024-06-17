@@ -1,6 +1,7 @@
 package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.common.Sequence;
+import com.yundepot.event.queue.consumer.WaitStrategy;
 
 /**
  * @author zhaiyanan

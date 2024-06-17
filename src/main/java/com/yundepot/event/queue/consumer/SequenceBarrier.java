@@ -1,7 +1,6 @@
 package com.yundepot.event.queue.consumer;
 
 import com.yundepot.event.queue.broker.Broker;
-import com.yundepot.event.queue.broker.WaitStrategy;
 import com.yundepot.event.queue.common.FixedSequenceGroup;
 import com.yundepot.event.queue.common.Sequence;
 
@@ -29,7 +28,8 @@ public class SequenceBarrier {
     }
 
     /**
-     * 等待其他序列,返回最大的可消费队列
+     * 等待其他序列,返回最大的可消费序列号
+     * return: 比sequence大的可消费序列号
      */
     public long waitFor(long sequence) throws Exception {
         long availableSequence = waitStrategy.waitFor(sequence, cursorSequence, dependentSequence);

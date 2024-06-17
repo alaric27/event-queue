@@ -1,7 +1,7 @@
 package com.yundepot.event.queue.quickstart;
 
 import com.yundepot.event.queue.EventQueue;
-import com.yundepot.event.queue.broker.BlockingWaitStrategy;
+import com.yundepot.event.queue.consumer.BlockingWaitStrategy;
 import com.yundepot.event.queue.broker.RingBuffer;
 
 import java.util.concurrent.locks.LockSupport;

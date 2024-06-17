@@ -98,7 +98,7 @@ public class DefaultConsumer<T> implements Consumer {
                 }
                 sequence.set(endOfBatchSequence);
             } catch (final Throwable ex) {
-                // todo 消费失败后， 当前的消息如何处理， 如果想重试呢？
+                // todo 消费失败后， 改条消息如何处理，目前是丢弃, 如果支持重试呢？
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 sequence.set(nextSequence);
                 nextSequence++;

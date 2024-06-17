@@ -3,6 +3,7 @@ package com.yundepot.event.queue.broker;
 import com.yundepot.event.queue.util.SequenceUtil;
 
 /**
+ * 只做简单的数据存储工作
  * @author zhaiyanan
  * @date 2024/6/12  16:40
  */

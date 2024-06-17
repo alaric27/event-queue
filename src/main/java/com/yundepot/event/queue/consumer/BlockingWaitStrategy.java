@@ -1,4 +1,4 @@
-package com.yundepot.event.queue.broker;
+package com.yundepot.event.queue.consumer;
 
 import com.yundepot.event.queue.common.Sequence;
 
@@ -13,6 +13,7 @@ public class BlockingWaitStrategy implements WaitStrategy {
     @Override
     public long waitFor(long sequence, Sequence cursorSequence, Sequence dependentSequence) throws Exception {
         long availableSequence;
+        // 如果还没生产到该个sequence，则等待
         if (cursorSequence.get() < sequence) {
             synchronized (mutex) {
                 while (cursorSequence.get() < sequence) {
@@ -21,6 +22,7 @@ public class BlockingWaitStrategy implements WaitStrategy {
             }
         }
 
+        //
         while ((availableSequence = dependentSequence.get()) < sequence) {
             Thread.onSpinWait();
         }

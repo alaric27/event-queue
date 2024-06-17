@@ -2,6 +2,7 @@ package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
+import com.yundepot.event.queue.consumer.WaitStrategy;
 import com.yundepot.event.queue.util.SequenceUtil;
 
 import java.lang.invoke.MethodHandles;
