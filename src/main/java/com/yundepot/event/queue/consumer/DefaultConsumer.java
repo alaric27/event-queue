@@ -2,7 +2,7 @@ package com.yundepot.event.queue.consumer;
 
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.util.DaemonThreadFactory;
+import com.yundepot.event.queue.common.DaemonThreadFactory;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;

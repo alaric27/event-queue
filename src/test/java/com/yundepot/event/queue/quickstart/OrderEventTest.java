@@ -1,8 +1,9 @@
 package com.yundepot.event.queue.quickstart;
 
 import com.yundepot.event.queue.EventQueue;
-import com.yundepot.event.queue.consumer.waitstrategy.BlockingWaitStrategy;
 import com.yundepot.event.queue.consumer.EventHandler;
+import com.yundepot.event.queue.producer.Producer;
+import com.yundepot.event.queue.producer.ProducerType;
 
 import java.util.concurrent.locks.LockSupport;
 
@@ -12,7 +13,63 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class OrderEventTest {
     public static void main(String[] args) throws Exception {
-        EventQueue<OrderEvent> eventQueue = new EventQueue<>(new OrderEventFactory(), 1024, new BlockingWaitStrategy());
+        simpleConsume();
+    }
+
+    /**
+     *  使用EventTranslator发布消息
+     */
+    private static void simpleConsume() {
+        EventQueue<OrderEvent> eventQueue = new EventQueue<>(new OrderEventFactory(), 1024, ProducerType.SINGLE);
+
+        // 添加消费者
+        EventHandler<OrderEvent> eh1 = (e, l) -> System.out.println("eh1 " + e.getValue());
+        eventQueue.handleEventsWith(eh1);
+        eventQueue.start();
+
+
+        // 发送消息
+        OrderEvent event = new OrderEvent();
+        for (int i = 0; i < 10; i++) {
+            event.setValue((long) i);
+            eventQueue.publishEvent((e, l) -> e.setValue(event.getValue()));
+        }
+        LockSupport.park();
+    }
+
+
+    /**
+     * 使用producer发布消息
+     */
+    private static void simpleConsumeWithProducer() {
+        EventQueue<OrderEvent> eventQueue = new EventQueue<>(new OrderEventFactory(), 1024, ProducerType.SINGLE);
+
+        // 添加消费者
+        EventHandler<OrderEvent> eh1 = (e, l) -> System.out.println("eh1 " + e.getValue());
+        eventQueue.handleEventsWith(eh1);
+        eventQueue.start();
+
+        // 发送消息
+        Producer<OrderEvent> producer = eventQueue.getProducer();
+        for (int i = 0; i < 10; i++) {
+            long next = producer.next();
+            try {
+                OrderEvent orderEvent = producer.get(next);
+                orderEvent.setValue((long) i);
+            } finally {
+                producer.publish(next);
+            }
+        }
+
+        LockSupport.park();
+    }
+
+
+    /**
+     * 多边形消费
+     */
+    private static void polygonConsume() {
+        EventQueue<OrderEvent> eventQueue = new EventQueue<>(new OrderEventFactory(), 1024);
 
         EventHandler eh1 = (e, l) -> System.out.println("eh1");
         EventHandler eh2 = (e, l) -> System.out.println("eh2");
@@ -34,9 +91,7 @@ public class OrderEventTest {
         eventQueue.after(eh4, eh5).then(eh6);
         eventQueue.start();
 
-        eventQueue.publishEvent((orderEvent, sequence) -> {
-            orderEvent.setValue(1L);
-        });
+        eventQueue.publishEvent((orderEvent, sequence) -> orderEvent.setValue(1L));
         LockSupport.park();
     }
 }

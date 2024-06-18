@@ -1,4 +1,4 @@
-package com.yundepot.event.queue.broker;
+package com.yundepot.event.queue.producer;
 
 /**
  * @author zhaiyanan

@@ -2,15 +2,11 @@ package com.yundepot.event.queue;
 
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
-import com.yundepot.event.queue.broker.EventFactory;
-import com.yundepot.event.queue.broker.RingBuffer;
+import com.yundepot.event.queue.producer.*;
 import com.yundepot.event.queue.consumer.waitstrategy.BlockingWaitStrategy;
 import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.consumer.*;
-import com.yundepot.event.queue.producer.DefaultProducer;
-import com.yundepot.event.queue.producer.EventTranslator;
-import com.yundepot.event.queue.producer.Producer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,26 +16,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class EventQueue<T> {
     private final Producer<T> producer;
-    private final ConsumerRepository consumerRepository;
+    private final ConsumerRepository consumerRepository = new ConsumerRepository();
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final Broker<T> broker;
 
     public EventQueue(EventFactory<T> eventFactory, int bufferSize) {
-        this(new RingBuffer<>(eventFactory, bufferSize));
+        this(eventFactory, bufferSize, ProducerType.MULTI);
     }
 
-    private EventQueue(RingBuffer<T> ringBuffer) {
-        this(ringBuffer, new BlockingWaitStrategy());
+    public EventQueue(EventFactory<T> eventFactory, int bufferSize, ProducerType producerType) {
+        this(eventFactory, bufferSize, producerType, new BlockingWaitStrategy());
     }
 
     public EventQueue(EventFactory<T> eventFactory, int bufferSize, WaitStrategy waitStrategy) {
-        this(new RingBuffer<>(eventFactory, bufferSize), waitStrategy);
+        this(eventFactory, bufferSize, ProducerType.MULTI, waitStrategy);
     }
 
-    private EventQueue(RingBuffer<T> ringBuffer, WaitStrategy waitStrategy) {
-        this.broker = new DefaultBroker<>(ringBuffer, waitStrategy);
-        this.producer = new DefaultProducer<>(broker);
-        consumerRepository = new ConsumerRepository();
+    public EventQueue(EventFactory<T> eventFactory, int bufferSize, ProducerType producerType, WaitStrategy waitStrategy) {
+        this(createProducer(producerType, new RingBuffer<>(eventFactory, bufferSize)), waitStrategy);
+    }
+
+    public EventQueue(Producer<T> producer, WaitStrategy waitStrategy) {
+        this(producer, new DefaultBroker<>(waitStrategy));
+    }
+
+    private EventQueue(Producer<T> producer, Broker<T> broker) {
+        this.broker = broker;
+        this.producer = producer;
+        this.broker.setProducer(producer);
+        this.producer.setBroker(broker);
     }
 
     public EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers) {
@@ -88,7 +93,18 @@ public class EventQueue<T> {
         }
     }
 
+    private static <T> Producer<T> createProducer(ProducerType producerType, RingBuffer<T> ringBuffer) {
+        if (producerType == ProducerType.SINGLE) {
+            return new SingleProducer<>(ringBuffer);
+        }
+        return new MultiProducer(ringBuffer);
+    }
+
     public void publishEvent(final EventTranslator<T> eventTranslator) {
         producer.publishEvent(eventTranslator);
+    }
+
+    public Producer<T> getProducer() {
+        return this.producer;
     }
 }

@@ -12,14 +12,14 @@ import java.util.Objects;
  */
 public class SequenceBarrier {
     private final Sequence dependentSequence;
-    private final Sequence cursorSequence;
+    private final Sequence producerSequence;
     private final Broker broker;
 
     public SequenceBarrier(final Broker broker, final Sequence[] dependentSequences) {
-        this.cursorSequence = broker.getCursorSequence();
+        this.producerSequence = broker.getProducer().getCursor();
         this.broker = broker;
         if (Objects.isNull(dependentSequences) || dependentSequences.length == 0) {
-            dependentSequence = cursorSequence;
+            dependentSequence = producerSequence;
         } else {
             dependentSequence = new FixedSequenceGroup(dependentSequences);
         }
@@ -30,7 +30,7 @@ public class SequenceBarrier {
      * return: 比sequence大的可消费序列号
      */
     public long waitFor(long sequence) throws Exception {
-        long availableSequence = broker.getWaitStrategy().waitFor(sequence, cursorSequence, dependentSequence);
+        long availableSequence = broker.getWaitStrategy().waitFor(sequence, producerSequence, dependentSequence);
         if (availableSequence < sequence) {
             return availableSequence;
         }

@@ -1,6 +1,6 @@
 package com.yundepot.event.queue.quickstart;
 
-import com.yundepot.event.queue.broker.EventFactory;
+import com.yundepot.event.queue.producer.EventFactory;
 
 /**
  * @author zhaiyanan

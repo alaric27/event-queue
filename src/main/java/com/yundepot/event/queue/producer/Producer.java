@@ -1,5 +1,8 @@
 package com.yundepot.event.queue.producer;
 
+import com.yundepot.event.queue.broker.Broker;
+import com.yundepot.event.queue.common.Sequence;
+
 /**
  * 生产者
  * @author zhaiyanan
@@ -46,4 +49,24 @@ public interface Producer<T> {
      * 直接发布事件
      */
     void publishEvent(final EventTranslator<T> translator);
+
+    /**
+     * 获取生产者序列
+     */
+    Sequence getCursor();
+
+    /**
+     * 序号是否能消费
+     */
+    boolean canConsume(long sequence);
+
+    /**
+     * 获取区间内已发布的最大sequence
+     */
+    long getHighestPublishedSequence(long lo, long hi);
+
+    /**
+     * 设置协调者
+     */
+    void setBroker(Broker<T> broker);
 }

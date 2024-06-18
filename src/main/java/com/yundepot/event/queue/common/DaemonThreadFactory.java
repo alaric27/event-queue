@@ -1,4 +1,4 @@
-package com.yundepot.event.queue.util;
+package com.yundepot.event.queue.common;
 
 import java.util.concurrent.ThreadFactory;
 

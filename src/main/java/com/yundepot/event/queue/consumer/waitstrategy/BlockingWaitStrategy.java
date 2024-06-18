@@ -3,6 +3,9 @@ package com.yundepot.event.queue.consumer.waitstrategy;
 import com.yundepot.event.queue.common.Sequence;
 
 /**
+ * 阻塞等待策略
+ * 如果没有可用事件，它将阻塞直到生产者添加新事件
+ * 适用于对延迟不敏感场景， 由于其阻塞性质，它在高并发环境下效率较低
  * @author zhaiyanan
  * @date 2024/6/17  15:37
  */

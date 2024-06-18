@@ -3,9 +3,8 @@ package com.yundepot.event.queue.util;
 
 import com.yundepot.event.queue.common.Sequence;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-
-import static java.util.Arrays.copyOf;
 
 /**
  * @author zhaiyanan
@@ -18,7 +17,7 @@ public class SequenceUtil {
         Sequence[] currentSequences;
         do {
             currentSequences = updater.get(holder);
-            updatedSequences = copyOf(currentSequences, currentSequences.length + sequencesToAdd.length);
+            updatedSequences = Arrays.copyOf(currentSequences, currentSequences.length + sequencesToAdd.length);
             cursorSequence = cursor.get();
 
             int index = currentSequences.length;
