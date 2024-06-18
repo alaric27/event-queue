@@ -1,4 +1,4 @@
-package com.yundepot.event.queue.consumer;
+package com.yundepot.event.queue.consumer.waitstrategy;
 
 import com.yundepot.event.queue.common.Sequence;
 
@@ -22,7 +22,7 @@ public class BlockingWaitStrategy implements WaitStrategy {
             }
         }
 
-        //
+        // 等待其他消费者
         while ((availableSequence = dependentSequence.get()) < sequence) {
             Thread.onSpinWait();
         }

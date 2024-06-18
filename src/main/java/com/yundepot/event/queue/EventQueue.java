@@ -2,16 +2,16 @@ package com.yundepot.event.queue;
 
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
+import com.yundepot.event.queue.broker.EventFactory;
 import com.yundepot.event.queue.broker.RingBuffer;
-import com.yundepot.event.queue.consumer.WaitStrategy;
+import com.yundepot.event.queue.consumer.waitstrategy.BlockingWaitStrategy;
+import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.consumer.*;
 import com.yundepot.event.queue.producer.DefaultProducer;
 import com.yundepot.event.queue.producer.EventTranslator;
 import com.yundepot.event.queue.producer.Producer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -19,30 +19,50 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @date 2024/6/12  17:17
  */
 public class EventQueue<T> {
-    private Producer<T> producer;
-    private List<Consumer> consumerList;
+    private final Producer<T> producer;
+    private final ConsumerRepository consumerRepository;
     private final AtomicBoolean started = new AtomicBoolean(false);
-    private Broker<T> broker;
+    private final Broker<T> broker;
 
-
-    public EventQueue(RingBuffer<T> ringBuffer, WaitStrategy waitStrategy) {
-        // todo broker consumer producer 之间的初始化关系
-        this.broker = new DefaultBroker<>(ringBuffer, waitStrategy);
-        this.producer = new DefaultProducer<>();
-        consumerList = new ArrayList<>();
+    public EventQueue(EventFactory<T> eventFactory, int bufferSize) {
+        this(new RingBuffer<>(eventFactory, bufferSize));
     }
 
-    public final EventHandlerGroup<T> handleEvents(final EventHandler<? super T>... handlers) {
+    private EventQueue(RingBuffer<T> ringBuffer) {
+        this(ringBuffer, new BlockingWaitStrategy());
+    }
+
+    public EventQueue(EventFactory<T> eventFactory, int bufferSize, WaitStrategy waitStrategy) {
+        this(new RingBuffer<>(eventFactory, bufferSize), waitStrategy);
+    }
+
+    private EventQueue(RingBuffer<T> ringBuffer, WaitStrategy waitStrategy) {
+        this.broker = new DefaultBroker<>(ringBuffer, waitStrategy);
+        this.producer = new DefaultProducer<>(broker);
+        consumerRepository = new ConsumerRepository();
+    }
+
+    public EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers) {
         return createConsumers(handlers);
     }
 
-    private EventHandlerGroup<T> createConsumers(EventHandler<? super T>[] handlers) {
+    EventHandlerGroup<T> createConsumers(EventHandler<? super T>[] handlers, Sequence... dependentSequences) {
         checkNotStarted();
+        final Sequence[] consumerSequences = new Sequence[handlers.length];
         for (int i = 0; i < handlers.length; i++) {
-            consumerList.add(new DefaultConsumer<T>(handlers[i], broker, new SequenceBarrier(broker, new Sequence[]{broker.getCursorSequence()})));
+            DefaultConsumer<T> consumer = new DefaultConsumer<>(handlers[i], broker, new SequenceBarrier(broker, dependentSequences));
+            consumerSequences[i] = consumer.getSequence();
+            consumerRepository.add(consumer);
         }
-        // todo 支持事件关系 or and then 等
-        return null;
+        return new EventHandlerGroup<>(this, consumerSequences);
+    }
+
+    public EventHandlerGroup<T> after(final EventHandler<? super T>... handlers) {
+        final Sequence[] sequences = new Sequence[handlers.length];
+        for (int i = 0, handlersLength = handlers.length; i < handlersLength; i++) {
+            sequences[i] = consumerRepository.getSequenceFor(handlers[i]);
+        }
+        return new EventHandlerGroup<>(this, sequences);
     }
 
     public void start() {
@@ -50,13 +70,13 @@ public class EventQueue<T> {
         if (!started.compareAndSet(false, true)) {
             throw new IllegalStateException("EventQueue.start() must only be called once.");
         }
-        broker.addConsumerSequences(consumerList.stream().map(Consumer::getSequence).toArray(Sequence[]::new));
-        producer.setBroker(broker);
-        consumerList.forEach(consumer -> consumer.start());
+        // 启动的时候添加消费者和生产者到协调者
+        broker.addConsumerSequences(consumerRepository.getAllConsumer().stream().map(Consumer::getSequence).toArray(Sequence[]::new));
+        consumerRepository.startAll();
     }
 
     public void shutdown() {
-        consumerList.forEach(consumer -> consumer.showdown());
+        consumerRepository.shutdownAll();
     }
 
     /**

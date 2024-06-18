@@ -1,7 +1,5 @@
 package com.yundepot.event.queue.producer;
 
-import com.yundepot.event.queue.broker.Broker;
-
 /**
  * 生产者
  * @author zhaiyanan
@@ -48,6 +46,4 @@ public interface Producer<T> {
      * 直接发布事件
      */
     void publishEvent(final EventTranslator<T> translator);
-
-    void setBroker(Broker<T> broker);
 }

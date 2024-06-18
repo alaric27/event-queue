@@ -1,7 +1,7 @@
 package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.consumer.WaitStrategy;
+import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
 
 /**
  * @author zhaiyanan
@@ -13,11 +13,6 @@ public interface Broker<T> {
      * 获取指定序列值
      */
     T get(long sequence);
-
-    /**
-     * 通知消费者可消费
-     */
-    void signalAllWhenBlocking();
 
     /**
      * 获取当序号
@@ -68,6 +63,11 @@ public interface Broker<T> {
      * 获取区间内已发布的最大sequence
      */
     long getHighestPublishedSequence(long lo, long hi);
+
+    /**
+     * 通知消费者可消费
+     */
+    void signalAllWhenBlocking();
 
     /**
      * 添加消费者进度

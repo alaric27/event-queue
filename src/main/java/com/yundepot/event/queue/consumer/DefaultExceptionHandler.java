@@ -17,11 +17,11 @@ public class DefaultExceptionHandler<T> implements ExceptionHandler<T> {
 
     @Override
     public void handleOnStartException(final Throwable ex) {
-        log.info("Exception during onStart()", ex);
+        log.info("Exception during start()", ex);
     }
 
     @Override
     public void handleOnShutdownException(final Throwable ex) {
-        log.info("Exception during onShutdown()", ex);
+        log.info("Exception during shutdown()", ex);
     }
 }

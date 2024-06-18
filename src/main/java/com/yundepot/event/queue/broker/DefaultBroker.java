@@ -2,7 +2,7 @@ package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.consumer.WaitStrategy;
+import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.util.SequenceUtil;
 
 import java.lang.invoke.MethodHandles;
@@ -27,6 +27,7 @@ public class DefaultBroker<T> implements Broker {
      * 数据存储进度
      */
     protected final Sequence cursor = new Sequence(Sequence.INITIAL_VALUE);
+
 
     private final WaitStrategy waitStrategy;
     private volatile Sequence[] consumerSequences = new Sequence[0];

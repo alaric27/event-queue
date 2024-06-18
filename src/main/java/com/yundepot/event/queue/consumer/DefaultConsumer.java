@@ -23,11 +23,11 @@ public class DefaultConsumer<T> implements Consumer {
     private final Sequence sequence = new Sequence(Sequence.INITIAL_VALUE);
     private final EventHandler eventHandler;
 
-    // 每次处理的事件数量
+    // 每次处理的事件数量,为了设置停止标识时及时发现
     private final int batchSize = 1000;
     private final AtomicInteger running = new AtomicInteger(IDLE);
     private ThreadFactory threadFactory = DaemonThreadFactory.INSTANCE;
-    private Broker<T> broker;
+    private final Broker<T> broker;
     private SequenceBarrier sequenceBarrier;
 
     // 异常处理器
@@ -50,9 +50,14 @@ public class DefaultConsumer<T> implements Consumer {
     }
 
     @Override
-    public void showdown() {
+    public void shutdown() {
         running.set(SHUTDOWN);
         broker.signalAllWhenBlocking();
+    }
+
+    @Override
+    public EventHandler getEventHandler() {
+        return this.eventHandler;
     }
 
     private void run() {
@@ -98,7 +103,7 @@ public class DefaultConsumer<T> implements Consumer {
                 }
                 sequence.set(endOfBatchSequence);
             } catch (final Throwable ex) {
-                // todo 消费失败后， 改条消息如何处理，目前是丢弃, 如果支持重试呢？
+                // 默认停止消费者; 如果需要重试或者忽略，需要用户在eventHandler.onEvent 中自己实现
                 exceptionHandler.handleEventException(ex, nextSequence, event);
                 sequence.set(nextSequence);
                 nextSequence++;

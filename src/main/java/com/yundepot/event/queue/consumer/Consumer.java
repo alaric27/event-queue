@@ -22,5 +22,10 @@ public interface Consumer {
     /**
      *  停止
      */
-    void showdown();
+    void shutdown();
+
+    /**
+     * 获取当前消费者的处理器
+     */
+    EventHandler getEventHandler();
 }
