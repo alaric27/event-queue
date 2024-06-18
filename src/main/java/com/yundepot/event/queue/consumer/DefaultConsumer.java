@@ -66,10 +66,6 @@ public class DefaultConsumer<T> implements Consumer {
             throw new IllegalStateException("Thread is already running");
         }
 
-        if (witnessValue == SHUTDOWN) {
-            return;
-        }
-
         notifyStart();
         try {
             if (running.get() == RUNNING) {
