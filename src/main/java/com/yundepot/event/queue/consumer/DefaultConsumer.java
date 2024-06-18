@@ -61,13 +61,8 @@ public class DefaultConsumer<T> implements Consumer {
     }
 
     private void run() {
-        int witnessValue = running.compareAndExchange(IDLE, RUNNING);
-        if (witnessValue == RUNNING) {
+        if (!running.compareAndSet(IDLE, RUNNING)) {
             throw new IllegalStateException("Thread is already running");
-        }
-
-        if (witnessValue == SHUTDOWN) {
-            return;
         }
 
         notifyStart();

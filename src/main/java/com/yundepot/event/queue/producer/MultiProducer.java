@@ -3,9 +3,8 @@ package com.yundepot.event.queue.producer;
 import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.SequenceUtil;
-
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
+import com.yundepot.event.queue.util.UnsafeUtil;
+import sun.misc.Unsafe;
 import java.util.Arrays;
 import java.util.concurrent.locks.LockSupport;
 
@@ -24,7 +23,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
      * 跟踪每个RingBuffer的槽发布状态
      */
     private final int[] publishedBuffer;
-    private static final VarHandle AVAILABLE_ARRAY = MethodHandles.arrayElementVarHandle(int[].class);
+    private static final Unsafe UNSAFE = UnsafeUtil.getUnsafe();
 
 
     public MultiProducer(RingBuffer<T> ringBuffer) {
@@ -78,7 +77,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     public boolean canConsume(long sequence) {
         int index = ringBuffer.calculateIndex(sequence);
         int flag = calculateAvailableFlag(sequence);
-        return (int) AVAILABLE_ARRAY.getAcquire(publishedBuffer, index) == flag;
+        return UNSAFE.getIntVolatile(publishedBuffer, index) == flag;
     }
 
     @Override
@@ -108,7 +107,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     }
 
     private void setPublished(final long sequence) {
-        AVAILABLE_ARRAY.setRelease(publishedBuffer, ringBuffer.calculateIndex(sequence), calculateAvailableFlag(sequence));
+        UNSAFE.putOrderedInt(publishedBuffer, ringBuffer.calculateIndex(sequence), calculateAvailableFlag(sequence));
     }
 
     /**

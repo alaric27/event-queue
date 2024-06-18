@@ -1,6 +1,7 @@
 package com.yundepot.event.queue.consumer.waitstrategy;
 
 import com.yundepot.event.queue.common.Sequence;
+import com.yundepot.event.queue.util.ThreadHints;
 
 /**
  * 自旋等待策略, 会导致较高的CPU消耗
@@ -14,7 +15,7 @@ public class BusySpinWaitStrategy implements WaitStrategy {
     public long waitFor(long sequence, Sequence cursorSequence, Sequence dependentSequence) throws Exception {
         long availableSequence;
         while ((availableSequence = dependentSequence.get()) < sequence) {
-            Thread.onSpinWait();
+            ThreadHints.onSpinWait();
         }
         return availableSequence;
     }

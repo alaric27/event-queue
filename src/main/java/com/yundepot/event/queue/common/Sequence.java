@@ -1,9 +1,8 @@
 package com.yundepot.event.queue.common;
 
 //import jdk.internal.vm.annotation.Contended;
-
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
+import com.yundepot.event.queue.util.UnsafeUtil;
+import sun.misc.Unsafe;
 
 /**
  * 用于追踪RingBuffer和EventProcessor的进度，表示生产/消费进度。
@@ -14,15 +13,17 @@ import java.lang.invoke.VarHandle;
 public class Sequence {
     // 消除伪共享
 //    @Contended
-    private long value;
+    private volatile long value;
 
     public static final long INITIAL_VALUE = -1L;
-    private static final VarHandle VALUE_FIELD;
+    private static final Unsafe UNSAFE;
+    private static final long VALUE_OFFSET;
 
     static {
+        UNSAFE = UnsafeUtil.getUnsafe();
         try {
-            VALUE_FIELD = MethodHandles.lookup().findVarHandle(Sequence.class, "value", long.class);
-        } catch (Exception e) {
+            VALUE_OFFSET = UNSAFE.objectFieldOffset(Sequence.class.getDeclaredField("value"));
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -32,23 +33,19 @@ public class Sequence {
     }
 
     public Sequence(long initialValue) {
-        this.value = initialValue;
+        UNSAFE.putOrderedLong(this, VALUE_OFFSET, initialValue);
     }
 
     public long get() {
-        long value = this.value;
-        VarHandle.acquireFence();
         return value;
     }
 
     public void set(final long value) {
-        VarHandle.releaseFence();
-        this.value = value;
-        VarHandle.fullFence();
+        UNSAFE.putLongVolatile(this, VALUE_OFFSET, value);
     }
 
     public boolean compareAndSet(final long expectedValue, final long newValue) {
-        return VALUE_FIELD.compareAndSet(this, expectedValue, newValue);
+        return UNSAFE.compareAndSwapLong(this, VALUE_OFFSET, expectedValue, newValue);
     }
 
     public long incrementAndGet() {
@@ -56,10 +53,22 @@ public class Sequence {
     }
 
     public long addAndGet(final long increment) {
-        return (long) VALUE_FIELD.getAndAdd(this, increment) + increment;
+        long currentValue;
+        long newValue;
+        do {
+            currentValue = get();
+            newValue = currentValue + increment;
+        } while (!compareAndSet(currentValue, newValue));
+        return newValue;
     }
 
     public long getAndAdd(final long increment) {
-        return (long) VALUE_FIELD.getAndAdd(this, increment);
+        long currentValue;
+        long newValue;
+        do {
+            currentValue = get();
+            newValue = currentValue + increment;
+        } while (!compareAndSet(currentValue, newValue));
+        return currentValue;
     }
 }
