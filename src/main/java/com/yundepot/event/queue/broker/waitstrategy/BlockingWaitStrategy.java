@@ -1,4 +1,4 @@
-package com.yundepot.event.queue.consumer.waitstrategy;
+package com.yundepot.event.queue.broker.waitstrategy;
 
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.ThreadHints;

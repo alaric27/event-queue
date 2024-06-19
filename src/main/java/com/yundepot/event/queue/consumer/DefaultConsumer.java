@@ -52,7 +52,7 @@ public class DefaultConsumer<T> implements Consumer {
     @Override
     public void shutdown() {
         running.set(SHUTDOWN);
-        broker.signalAllWhenBlocking();
+        broker.getWaitStrategy().signalAllWhenBlocking();
     }
 
     @Override

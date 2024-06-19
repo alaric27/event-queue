@@ -1,7 +1,7 @@
 package com.yundepot.event.queue.broker;
 
+import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.producer.Producer;
 import com.yundepot.event.queue.util.SequenceUtil;
 
@@ -31,11 +31,6 @@ public class DefaultBroker<T> implements Broker {
     @Override
     public long getHighestPublishedSequence(long lo, long hi) {
         return producer.getHighestPublishedSequence(lo, hi);
-    }
-
-    @Override
-    public void signalAllWhenBlocking() {
-        waitStrategy.signalAllWhenBlocking();
     }
 
     @Override
