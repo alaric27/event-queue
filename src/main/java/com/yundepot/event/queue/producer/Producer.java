@@ -51,6 +51,11 @@ public interface Producer<T> {
     void publishEvent(final EventTranslator<T> translator);
 
     /**
+     * 直接发布事件
+     */
+    void publishEvent(final EventTranslatorVarargs<T> translator, Object... args);
+
+    /**
      * 获取生产者序列
      */
     Sequence getCursor();

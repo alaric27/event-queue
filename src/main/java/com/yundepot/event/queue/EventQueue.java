@@ -104,6 +104,10 @@ public class EventQueue<T> {
         producer.publishEvent(eventTranslator);
     }
 
+    public void publishEvent(final EventTranslatorVarargs<T> eventTranslator, Object... args) {
+        producer.publishEvent(eventTranslator, args);
+    }
+
     public Producer<T> getProducer() {
         return this.producer;
     }
