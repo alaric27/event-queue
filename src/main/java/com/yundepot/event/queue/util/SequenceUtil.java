@@ -73,8 +73,8 @@ public class SequenceUtil {
     /**
      * 获取一组序列的最小值
      */
-    public static long getMinSequence(Sequence[] sequences, long defaultValue) {
-        long minSequence = defaultValue;
+    public static long getMinSequence(Sequence[] sequences) {
+        long minSequence = Long.MAX_VALUE;
         for (int i = 0, n = sequences.length; i < n; i++) {
             long value = sequences[i].get();
             minSequence = Math.min(minSequence, value);

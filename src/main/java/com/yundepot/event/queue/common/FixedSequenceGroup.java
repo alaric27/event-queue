@@ -17,7 +17,7 @@ public class FixedSequenceGroup extends Sequence {
 
     @Override
     public long get() {
-        return SequenceUtil.getMinSequence(sequences, Long.MAX_VALUE);
+        return SequenceUtil.getMinSequence(sequences);
     }
 
     @Override

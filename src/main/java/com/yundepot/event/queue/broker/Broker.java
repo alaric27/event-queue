@@ -31,9 +31,10 @@ public interface Broker<T> {
     boolean removeConsumerSequence(Sequence sequence);
 
     /**
-     * 获取消费进度
+     * 获取最小消费者序号
+     * @return
      */
-    Sequence[] getConsumerSequences();
+    long getMinConsumerSequence();
 
     /**
      * 获取等待策略
@@ -46,7 +47,7 @@ public interface Broker<T> {
     void setProducer(Producer<T> producer);
 
     /**
-     * 获取生产者
+     * 获取生产者序列号
      */
-    Producer<T> getProducer();
+    Sequence getProducerSequence();
 }

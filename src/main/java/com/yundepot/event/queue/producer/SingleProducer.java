@@ -2,7 +2,6 @@ package com.yundepot.event.queue.producer;
 
 import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.util.SequenceUtil;
 
 import java.util.concurrent.locks.LockSupport;
 
@@ -42,7 +41,7 @@ public class SingleProducer<T> extends AbstractProducer<T> {
         long next = current + n;
 
         // 如果没有可用的空间等待
-        while (!hasAvailableCapacity(next, current)) {
+        while (!hasAvailableCapacity(next)) {
             // 这里让生产者等待1纳秒，后续有可能使用等待策略
             LockSupport.parkNanos(1L);
         }
@@ -57,17 +56,17 @@ public class SingleProducer<T> extends AbstractProducer<T> {
             throw new IllegalArgumentException("n must be > 0");
         }
         long current = cursor.get();
-        if (!hasAvailableCapacity(current + n, current)) {
+        if (!hasAvailableCapacity(current + n)) {
             throw new CapacityException();
         }
         return publishedSequence.addAndGet(n);
     }
 
-    private boolean hasAvailableCapacity(long next, long current) {
+    private boolean hasAvailableCapacity(long next) {
         long wrapPoint = next - ringBuffer.getBufferSize();
         long cachedGatingSequence = this.cachedValue;
         if (wrapPoint > cachedGatingSequence) {
-            long minSequence = SequenceUtil.getMinSequence(broker.getConsumerSequences(), current);
+            long minSequence = broker.getMinConsumerSequence();
             this.cachedValue = minSequence;
             if (wrapPoint > minSequence) {
                 return false;
