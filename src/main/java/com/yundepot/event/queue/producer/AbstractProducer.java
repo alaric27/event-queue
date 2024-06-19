@@ -58,6 +58,16 @@ public abstract class AbstractProducer<T> implements Producer<T> {
     }
 
     @Override
+    public void publishEvent(EventTranslatorVarargs<T> translator, Object... args) {
+        final long sequence = next();
+        try {
+            translator.translateTo(get(sequence), sequence, args);
+        } finally {
+            publish(sequence);
+        }
+    }
+
+    @Override
     public void setBroker(Broker<T> broker) {
         this.broker = broker;
     }
