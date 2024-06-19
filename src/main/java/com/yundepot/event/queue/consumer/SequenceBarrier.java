@@ -16,7 +16,7 @@ public class SequenceBarrier {
     private final Broker broker;
 
     public SequenceBarrier(final Broker broker, final Sequence[] dependentSequences) {
-        this.producerSequence = broker.getProducer().getCursor();
+        this.producerSequence = broker.getProducerSequence();
         this.broker = broker;
         if (Objects.isNull(dependentSequences) || dependentSequences.length == 0) {
             dependentSequence = producerSequence;

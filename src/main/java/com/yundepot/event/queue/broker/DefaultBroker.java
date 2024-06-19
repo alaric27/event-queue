@@ -44,8 +44,8 @@ public class DefaultBroker<T> implements Broker {
     }
 
     @Override
-    public Sequence[] getConsumerSequences() {
-        return consumerSequences;
+    public long getMinConsumerSequence() {
+        return SequenceUtil.getMinSequence(consumerSequences);
     }
 
     @Override
@@ -59,7 +59,7 @@ public class DefaultBroker<T> implements Broker {
     }
 
     @Override
-    public Producer getProducer() {
-        return producer;
+    public Sequence getProducerSequence() {
+        return producer.getCursor();
     }
 }

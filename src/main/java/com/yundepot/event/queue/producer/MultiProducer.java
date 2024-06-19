@@ -34,9 +34,8 @@ public class MultiProducer<T> extends AbstractProducer<T> {
 
     @Override
     public long next(int n) {
-        long current = cursor.getAndAdd(n);
-        long nextSequence = current + n;
-        while (!hasAvailableCapacity(nextSequence, current)) {
+        long nextSequence = cursor.addAndGet(n);
+        while (!hasAvailableCapacity(nextSequence)) {
             LockSupport.parkNanos(1L);
         }
         return nextSequence;
@@ -52,7 +51,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
         do {
             current = cursor.get();
             next = current + n;
-            if (!hasAvailableCapacity(n, current)) {
+            if (!hasAvailableCapacity(next)) {
                 throw new CapacityException();
             }
         } while (!cursor.compareAndSet(current, next));
@@ -90,14 +89,15 @@ public class MultiProducer<T> extends AbstractProducer<T> {
         return hi;
     }
 
-    private boolean hasAvailableCapacity(long next, long current) {
+    private boolean hasAvailableCapacity(long next) {
         // 用于判断生产者的序号在环形数组中是否绕过了消费者最小的序号
         long wrapPoint = next - ringBuffer.getBufferSize();
         long cachedConsumerSequence = consumerSequenceCache.get();
 
         //  判断wrapPoint是否大于上一次计算时消费者的最小值, 如果大于则进行一次从新计算判断，否则直接后续赋值操作
         if (wrapPoint > cachedConsumerSequence) {
-            long minSequence = SequenceUtil.getMinSequence(broker.getConsumerSequences(), current);
+            // 消费者最小序号, 不可能比生产者序号大
+            long minSequence = broker.getMinConsumerSequence();
             consumerSequenceCache.set(minSequence);
             if (wrapPoint > minSequence) {
                 return false;
