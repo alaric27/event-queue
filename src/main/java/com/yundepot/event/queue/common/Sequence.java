@@ -6,7 +6,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
 /**
- * 用于追踪RingBuffer和EventProcessor的进度，表示生产/消费进度。
+ * 用于追踪生产/消费进度。
  * 可由AtomicLong代替
  * @author zhaiyanan
  * @date 2024/6/12  15:50

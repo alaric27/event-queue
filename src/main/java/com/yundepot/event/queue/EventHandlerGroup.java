@@ -30,6 +30,6 @@ public class EventHandlerGroup<T> {
      * 和前一个EventHandlerGroup串行，组内并行
      */
     public EventHandlerGroup<T> then(final EventHandler<? super T>... handlers) {
-        return eventQueue.createConsumers(handlers, sequences);
+        return eventQueue.addConsumers(handlers, sequences);
     }
 }

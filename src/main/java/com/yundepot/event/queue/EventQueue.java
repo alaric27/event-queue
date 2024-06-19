@@ -3,8 +3,8 @@ package com.yundepot.event.queue;
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
 import com.yundepot.event.queue.producer.*;
-import com.yundepot.event.queue.consumer.waitstrategy.BlockingWaitStrategy;
-import com.yundepot.event.queue.consumer.waitstrategy.WaitStrategy;
+import com.yundepot.event.queue.broker.waitstrategy.BlockingWaitStrategy;
+import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.consumer.*;
 
@@ -48,10 +48,10 @@ public class EventQueue<T> {
     }
 
     public EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers) {
-        return createConsumers(handlers);
+        return addConsumers(handlers);
     }
 
-    EventHandlerGroup<T> createConsumers(EventHandler<? super T>[] handlers, Sequence... dependentSequences) {
+    EventHandlerGroup<T> addConsumers(EventHandler<? super T>[] handlers, Sequence... dependentSequences) {
         checkNotStarted();
         final Sequence[] consumerSequences = new Sequence[handlers.length];
         for (int i = 0; i < handlers.length; i++) {

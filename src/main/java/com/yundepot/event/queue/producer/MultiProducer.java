@@ -63,7 +63,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     @Override
     public void publish(long sequence) {
         setPublished(sequence);
-        broker.signalAllWhenBlocking();
+        broker.getWaitStrategy().signalAllWhenBlocking();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
         for (long i = lo; i <= hi; i++) {
             setPublished(i);
         }
-        broker.signalAllWhenBlocking();
+        broker.getWaitStrategy().signalAllWhenBlocking();
     }
 
     @Override

@@ -8,5 +8,5 @@ module com.yundopot.event.queue {
     exports com.yundepot.event.queue.consumer;
     exports com.yundepot.event.queue.broker;
     exports com.yundepot.event.queue.common;
-    exports com.yundepot.event.queue.consumer.waitstrategy;
+    exports com.yundepot.event.queue.broker.waitstrategy;
 }
