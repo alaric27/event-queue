@@ -3,6 +3,10 @@ package com.yundepot.event.queue.broker.waitstrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.ThreadHints;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  * 阻塞等待策略
  * 如果没有可用事件，它将阻塞直到生产者添加新事件
@@ -12,21 +16,23 @@ import com.yundepot.event.queue.util.ThreadHints;
  */
 public class BlockingWaitStrategy implements WaitStrategy {
 
-    private final Object mutex = new Object();
+    private final Lock lock = new ReentrantLock();
+    private final Condition processorNotifyCondition = lock.newCondition();
 
     @Override
     public long waitFor(long sequence, Sequence cursorSequence, Sequence dependentSequence) throws Exception {
         long availableSequence;
-        // 如果还没生产到该个sequence，则等待
         if (cursorSequence.get() < sequence) {
-            synchronized (mutex) {
+            lock.lock();
+            try {
                 while (cursorSequence.get() < sequence) {
-                    mutex.wait();
+                    processorNotifyCondition.await();
                 }
+            } finally {
+                lock.unlock();
             }
         }
 
-        // 等待其他消费者
         while ((availableSequence = dependentSequence.get()) < sequence) {
             ThreadHints.onSpinWait();
         }
@@ -34,9 +40,13 @@ public class BlockingWaitStrategy implements WaitStrategy {
     }
 
     @Override
-    public void signalAllWhenBlocking() {
-        synchronized (mutex) {
-            mutex.notifyAll();
+    public void signalAllWhenBlocking()
+    {
+        lock.lock();
+        try {
+            processorNotifyCondition.signalAll();
+        } finally {
+            lock.unlock();
         }
     }
 }
