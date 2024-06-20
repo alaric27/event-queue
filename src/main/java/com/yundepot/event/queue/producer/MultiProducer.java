@@ -2,7 +2,6 @@ package com.yundepot.event.queue.producer;
 
 import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.util.SequenceUtil;
 import com.yundepot.event.queue.util.UnsafeUtil;
 import sun.misc.Unsafe;
 import java.util.Arrays;
@@ -24,6 +23,8 @@ public class MultiProducer<T> extends AbstractProducer<T> {
      */
     private final int[] publishedBuffer;
     private static final Unsafe UNSAFE = UnsafeUtil.getUnsafe();
+    private static final long BASE = UNSAFE.arrayBaseOffset(int[].class);
+    private static final long SCALE = UNSAFE.arrayIndexScale(int[].class);
 
 
     public MultiProducer(RingBuffer<T> ringBuffer) {
@@ -76,7 +77,8 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     public boolean canConsume(long sequence) {
         int index = ringBuffer.calculateIndex(sequence);
         int flag = calculateAvailableFlag(sequence);
-        return UNSAFE.getIntVolatile(publishedBuffer, index) == flag;
+        long bufferAddress = (index * SCALE) + BASE;
+        return UNSAFE.getIntVolatile(publishedBuffer, bufferAddress) == flag;
     }
 
     @Override
@@ -107,7 +109,9 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     }
 
     private void setPublished(final long sequence) {
-        UNSAFE.putOrderedInt(publishedBuffer, ringBuffer.calculateIndex(sequence), calculateAvailableFlag(sequence));
+        int index = ringBuffer.calculateIndex(sequence);
+        long bufferAddress = (index * SCALE) + BASE;
+        UNSAFE.putOrderedInt(publishedBuffer, bufferAddress, calculateAvailableFlag(sequence));
     }
 
     /**
