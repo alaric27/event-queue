@@ -13,10 +13,6 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class MultiProducer<T> extends AbstractProducer<T> {
 
-    /**
-     * 缓存消费进度，避免多次计算
-     */
-    private final Sequence consumerSequenceCache = new Sequence(Sequence.INITIAL_VALUE);
 
     /**
      * 跟踪每个RingBuffer的槽发布状态
@@ -29,15 +25,6 @@ public class MultiProducer<T> extends AbstractProducer<T> {
         super(ringBuffer);
         publishedBuffer = new int[ringBuffer.getBufferSize()];
         Arrays.fill(publishedBuffer, -1);
-    }
-
-    @Override
-    public long next(int n) {
-        long nextSequence = cursor.addAndGet(n);
-        while (!hasAvailableCapacity(nextSequence)) {
-            LockSupport.parkNanos(1L);
-        }
-        return nextSequence;
     }
 
     @Override
@@ -69,23 +56,6 @@ public class MultiProducer<T> extends AbstractProducer<T> {
             }
         }
         return hi;
-    }
-
-    private boolean hasAvailableCapacity(long next) {
-        // 用于判断生产者的序号在环形数组中是否绕过了消费者最小的序号
-        long wrapPoint = next - ringBuffer.getBufferSize();
-        long cachedConsumerSequence = consumerSequenceCache.get();
-
-        //  判断wrapPoint是否大于上一次计算时消费者的最小值, 如果大于则进行一次从新计算判断，否则直接后续赋值操作
-        if (wrapPoint > cachedConsumerSequence) {
-            // 消费者最小序号, 不可能比生产者序号大
-            long minSequence = broker.getMinConsumerSequence();
-            consumerSequenceCache.set(minSequence);
-            if (wrapPoint > minSequence) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void setPublished(final long sequence) {
