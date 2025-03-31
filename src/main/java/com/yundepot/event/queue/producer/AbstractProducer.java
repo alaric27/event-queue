@@ -33,11 +33,6 @@ public abstract class AbstractProducer<T> implements Producer<T> {
     }
 
     @Override
-    public long tryNext() throws Exception {
-        return tryNext(1);
-    }
-
-    @Override
     public T get(long sequence) {
         return ringBuffer.get(sequence);
     }

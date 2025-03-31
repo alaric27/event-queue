@@ -1,6 +1,5 @@
 package com.yundepot.event.queue.producer;
 
-import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
 
 import java.util.concurrent.locks.LockSupport;
@@ -48,18 +47,6 @@ public class SingleProducer<T> extends AbstractProducer<T> {
         cursor.set(next);
         // 返回新的序号值
         return next;
-    }
-
-    @Override
-    public long tryNext(int n) throws Exception {
-        if (n < 1) {
-            throw new IllegalArgumentException("n must be > 0");
-        }
-        long current = cursor.get();
-        if (!hasAvailableCapacity(current + n)) {
-            throw new CapacityException();
-        }
-        return publishedSequence.addAndGet(n);
     }
 
     private boolean hasAvailableCapacity(long next) {

@@ -1,8 +1,6 @@
 package com.yundepot.event.queue.producer;
 
-import com.yundepot.event.queue.common.CapacityException;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.util.SequenceUtil;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -40,23 +38,6 @@ public class MultiProducer<T> extends AbstractProducer<T> {
             LockSupport.parkNanos(1L);
         }
         return nextSequence;
-    }
-
-    @Override
-    public long tryNext(int n) throws Exception {
-        if (n < 1) {
-            throw new IllegalArgumentException("n must be > 0");
-        }
-        long current;
-        long next;
-        do {
-            current = cursor.get();
-            next = current + n;
-            if (!hasAvailableCapacity(next)) {
-                throw new CapacityException();
-            }
-        } while (!cursor.compareAndSet(current, next));
-        return next;
     }
 
     @Override

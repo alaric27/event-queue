@@ -21,16 +21,6 @@ public interface Producer<T> {
     long next(int n);
 
     /**
-     * 尝试获取下一个可用生产者序列值, 获取不到会抛异常
-     */
-    long tryNext() throws Exception;
-
-    /**
-     * 尝试获取下一个可用生产者序列区间, 获取不到会抛异常
-     */
-    long tryNext(int n) throws Exception;
-
-    /**
      * 发布
      */
     void publish(long sequence);
