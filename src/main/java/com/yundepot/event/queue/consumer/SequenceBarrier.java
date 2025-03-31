@@ -32,6 +32,6 @@ public class SequenceBarrier {
         if (availableSequence < sequence) {
             return availableSequence;
         }
-        return broker.getHighestPublishedSequence(sequence, availableSequence);
+        return broker.getHighestPublishedSequence(availableSequence);
     }
 }

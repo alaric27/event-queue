@@ -4,6 +4,7 @@ import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.SequenceUtil;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -45,8 +46,12 @@ public class DefaultBroker<T> implements Broker {
     }
 
     @Override
-    public long getHighestPublishedSequence(long lo, long hi) {
-        return producer.getHighestPublishedSequence(lo, hi);
+    public long getHighestPublishedSequence(Long hi) {
+        long ps = this.publishedSequence.get();
+        if (Objects.isNull(hi)) {
+            return ps;
+        }
+        return hi > ps ? ps : hi;
     }
 
     @Override

@@ -17,7 +17,7 @@ public interface Broker<T> {
     /**
      * 获取区间内已发布的最大sequence
      */
-    long getHighestPublishedSequence(long lo, long hi);
+    long getHighestPublishedSequence(Long hi);
 
     /**
      * 添加消费者进度
