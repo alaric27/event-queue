@@ -10,6 +10,11 @@ import com.yundepot.event.queue.common.Sequence;
 public interface Broker<T> {
 
     /**
+     * 获取一个可用的生产者序列区间, 获取不到会等待
+     */
+    long next(int n);
+
+    /**
      * 获取指定序列值
      */
     T get(long sequence);
@@ -20,6 +25,11 @@ public interface Broker<T> {
     long getHighestPublishedSequence(Long hi);
 
     /**
+     * 发布
+     */
+    void publish(long sequence);
+
+    /**
      * 添加消费者进度
      */
     void addConsumerSequences(Sequence... consumerSequences);
@@ -28,12 +38,6 @@ public interface Broker<T> {
      * 删除消费者进度
      */
     boolean removeConsumerSequence(Sequence sequence);
-
-    /**
-     * 获取最小消费者序号
-     * @return
-     */
-    long getMinConsumerSequence();
 
     /**
      * 获取等待策略

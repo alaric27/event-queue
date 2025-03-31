@@ -30,8 +30,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     public void publish(long sequence) {
         setPublished(sequence);
         long highestPublishedSequence = getHighestPublishedSequence(broker.getPublishedSequence().get(), sequence);
-        broker.getPublishedSequence().set(highestPublishedSequence);
-        broker.getWaitStrategy().signalAllWhenBlocking();
+        broker.publish(highestPublishedSequence);
     }
 
 

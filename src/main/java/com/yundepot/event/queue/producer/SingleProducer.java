@@ -12,12 +12,8 @@ public class SingleProducer<T> extends AbstractProducer<T> {
         super(broker);
     }
 
-
     @Override
     public void publish(long sequence) {
-        //修改生产者已发布序列号，消费者就可以进行消费
-        broker.getPublishedSequence().set(sequence);
-        // 根据不同的等待策略唤醒消费线程
-        broker.getWaitStrategy().signalAllWhenBlocking();
+        broker.publish(sequence);
     }
 }
