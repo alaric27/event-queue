@@ -40,7 +40,7 @@ public class MultiProducer<T> extends AbstractProducer<T> {
                 return sequence - 1;
             }
         }
-        return lo;
+        return hi;
     }
 
     private boolean canConsume(long sequence) {
