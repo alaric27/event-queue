@@ -1,11 +1,10 @@
 package com.yundepot.event.queue.producer;
 
-import com.yundepot.event.queue.common.Sequence;
+import com.yundepot.event.queue.broker.Broker;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.util.Arrays;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * @author zhaiyanan
@@ -21,45 +20,38 @@ public class MultiProducer<T> extends AbstractProducer<T> {
     private static final VarHandle AVAILABLE_ARRAY = MethodHandles.arrayElementVarHandle(int[].class);
 
 
-    public MultiProducer(RingBuffer<T> ringBuffer) {
-        super(ringBuffer);
-        publishedBuffer = new int[ringBuffer.getBufferSize()];
+    public MultiProducer(Broker<T> broker) {
+        super(broker);
+        publishedBuffer = new int[broker.getRingBuffer().getBufferSize()];
         Arrays.fill(publishedBuffer, -1);
     }
 
     @Override
     public void publish(long sequence) {
         setPublished(sequence);
+        long highestPublishedSequence = getHighestPublishedSequence(broker.getPublishedSequence().get(), sequence);
+        broker.getPublishedSequence().set(highestPublishedSequence);
         broker.getWaitStrategy().signalAllWhenBlocking();
     }
 
-    @Override
-    public void publish(long lo, long hi) {
-        for (long i = lo; i <= hi; i++) {
-            setPublished(i);
-        }
-        broker.getWaitStrategy().signalAllWhenBlocking();
-    }
 
-    @Override
-    public boolean canConsume(long sequence) {
-        int index = ringBuffer.calculateIndex(sequence);
-        int flag = calculateAvailableFlag(sequence);
-        return (int) AVAILABLE_ARRAY.getAcquire(publishedBuffer, index) == flag;
-    }
-
-    @Override
-    public long getHighestPublishedSequence(long lo, long hi) {
+    private long getHighestPublishedSequence(long lo, long hi) {
         for (long sequence = lo; sequence <= hi; sequence++) {
             if (!canConsume(sequence)) {
                 return sequence - 1;
             }
         }
-        return hi;
+        return lo;
+    }
+
+    private boolean canConsume(long sequence) {
+        int index = broker.getRingBuffer().calculateIndex(sequence);
+        int flag = calculateAvailableFlag(sequence);
+        return (int) AVAILABLE_ARRAY.getAcquire(publishedBuffer, index) == flag;
     }
 
     private void setPublished(final long sequence) {
-        AVAILABLE_ARRAY.setRelease(publishedBuffer, ringBuffer.calculateIndex(sequence), calculateAvailableFlag(sequence));
+        AVAILABLE_ARRAY.setRelease(publishedBuffer, broker.getRingBuffer().calculateIndex(sequence), calculateAvailableFlag(sequence));
     }
 
     /**
@@ -68,6 +60,6 @@ public class MultiProducer<T> extends AbstractProducer<T> {
      * 判断是否可用，只需要判断availableBuffer中对应索引的值，是否为sequence对应flag即可
      */
     private int calculateAvailableFlag(final long sequence) {
-        return (int) (sequence >>> ringBuffer.getIndexShift());
+        return (int) (sequence >>> broker.getRingBuffer().getIndexShift());
     }
 }

@@ -1,5 +1,6 @@
-package com.yundepot.event.queue.producer;
+package com.yundepot.event.queue.broker;
 
+import com.yundepot.event.queue.producer.EventFactory;
 import com.yundepot.event.queue.util.SequenceUtil;
 
 /**

@@ -2,7 +2,6 @@ package com.yundepot.event.queue.broker;
 
 import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
-import com.yundepot.event.queue.producer.Producer;
 
 /**
  * @author zhaiyanan
@@ -42,12 +41,14 @@ public interface Broker<T> {
     WaitStrategy getWaitStrategy();
 
     /**
-     * 设置生产者
-     */
-    void setProducer(Producer<T> producer);
-
-    /**
      * 获取生产者序列号
      */
-    Sequence getProducerSequence();
+    Sequence getCursor();
+
+    RingBuffer<T> getRingBuffer();
+
+    /**
+     * 获取已发布的最大序列号
+     */
+    Sequence getPublishedSequence();
 }

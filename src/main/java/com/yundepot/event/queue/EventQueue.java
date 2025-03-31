@@ -2,6 +2,7 @@ package com.yundepot.event.queue;
 
 import com.yundepot.event.queue.broker.Broker;
 import com.yundepot.event.queue.broker.DefaultBroker;
+import com.yundepot.event.queue.broker.RingBuffer;
 import com.yundepot.event.queue.producer.*;
 import com.yundepot.event.queue.broker.waitstrategy.BlockingWaitStrategy;
 import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
@@ -33,18 +34,20 @@ public class EventQueue<T> {
     }
 
     public EventQueue(EventFactory<T> eventFactory, int bufferSize, ProducerType producerType, WaitStrategy waitStrategy) {
-        this(createProducer(producerType, new RingBuffer<>(eventFactory, bufferSize)), waitStrategy);
+        this(new RingBuffer<>(eventFactory, bufferSize), producerType, waitStrategy);
     }
 
-    public EventQueue(Producer<T> producer, WaitStrategy waitStrategy) {
-        this(producer, new DefaultBroker<>(waitStrategy));
+    public EventQueue(RingBuffer<T> ringBuffer, ProducerType producerType, WaitStrategy waitStrategy) {
+        this(producerType, new DefaultBroker<>(ringBuffer, waitStrategy));
+    }
+
+    public EventQueue(ProducerType producerType, Broker<T> broker) {
+        this(createProducer(producerType, broker), broker);
     }
 
     private EventQueue(Producer<T> producer, Broker<T> broker) {
         this.broker = broker;
         this.producer = producer;
-        this.broker.setProducer(producer);
-        this.producer.setBroker(broker);
     }
 
     public EventHandlerGroup<T> handleEventsWith(final EventHandler<? super T>... handlers) {
@@ -93,11 +96,11 @@ public class EventQueue<T> {
         }
     }
 
-    private static <T> Producer<T> createProducer(ProducerType producerType, RingBuffer<T> ringBuffer) {
+    private static <T> Producer<T> createProducer(ProducerType producerType, Broker<T> broker) {
         if (producerType == ProducerType.SINGLE) {
-            return new SingleProducer<>(ringBuffer);
+            return new SingleProducer<>(broker);
         }
-        return new MultiProducer(ringBuffer);
+        return new MultiProducer(broker);
     }
 
     public void publishEvent(final EventTranslator<T> eventTranslator) {

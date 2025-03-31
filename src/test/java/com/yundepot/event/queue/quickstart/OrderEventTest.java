@@ -13,9 +13,9 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class OrderEventTest {
     public static void main(String[] args) throws Exception {
-//        simpleConsume();
+        simpleConsume();
 //        simpleConsumeWithProducer();
-        polygonConsume();
+//        polygonConsume();
     }
 
     /**
