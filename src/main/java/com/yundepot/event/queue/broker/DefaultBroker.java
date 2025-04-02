@@ -83,15 +83,6 @@ public class DefaultBroker<T> implements Broker {
     }
 
     @Override
-    public long getHighestPublishedSequence(Long hi) {
-        long ps = this.publishedSequence.get();
-        if (Objects.isNull(hi)) {
-            return ps;
-        }
-        return hi > ps ? ps : hi;
-    }
-
-    @Override
     public void publish(long sequence) {
         //修改生产者已发布序列号，消费者就可以进行消费
         publishedSequence.set(sequence);

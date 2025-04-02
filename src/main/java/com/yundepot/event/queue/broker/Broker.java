@@ -20,11 +20,6 @@ public interface Broker<T> {
     T get(long sequence);
 
     /**
-     * 获取区间内已发布的最大sequence
-     */
-    long getHighestPublishedSequence(Long hi);
-
-    /**
      * 发布
      */
     void publish(long sequence);

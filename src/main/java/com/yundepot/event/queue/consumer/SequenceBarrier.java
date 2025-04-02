@@ -17,7 +17,7 @@ public class SequenceBarrier {
     public SequenceBarrier(final Broker broker, final Sequence[] dependentSequences) {
         this.broker = broker;
         if (Objects.isNull(dependentSequences) || dependentSequences.length == 0) {
-            dependentSequence = broker.getCursor();
+            dependentSequence = broker.getPublishedSequence();
         } else {
             dependentSequence = new FixedSequenceGroup(dependentSequences);
         }
@@ -28,10 +28,6 @@ public class SequenceBarrier {
      * return: 比sequence大的可消费序列号
      */
     public long waitFor(long sequence) throws Exception {
-        long availableSequence = broker.getWaitStrategy().waitFor(sequence, broker.getCursor(), dependentSequence);
-        if (availableSequence < sequence) {
-            return availableSequence;
-        }
-        return broker.getHighestPublishedSequence(availableSequence);
+        return broker.getWaitStrategy().waitFor(sequence, broker.getCursor(), dependentSequence);
     }
 }
