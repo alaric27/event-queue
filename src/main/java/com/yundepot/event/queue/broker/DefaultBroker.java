@@ -4,7 +4,6 @@ import com.yundepot.event.queue.broker.waitstrategy.WaitStrategy;
 import com.yundepot.event.queue.common.Sequence;
 import com.yundepot.event.queue.util.SequenceUtil;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.concurrent.locks.LockSupport;
 
@@ -84,6 +83,10 @@ public class DefaultBroker<T> implements Broker {
 
     @Override
     public void publish(long sequence) {
+        if (sequence <= publishedSequence.get()) {
+            return;
+        }
+
         //修改生产者已发布序列号，消费者就可以进行消费
         publishedSequence.set(sequence);
         // 根据不同的等待策略唤醒消费线程
