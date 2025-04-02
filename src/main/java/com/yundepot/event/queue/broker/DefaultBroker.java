@@ -83,14 +83,20 @@ public class DefaultBroker<T> implements Broker {
 
     @Override
     public void publish(long sequence) {
-        if (sequence <= publishedSequence.get()) {
-            return;
+        while (true) {
+            long cur = publishedSequence.get();
+            if (cur >= sequence) {
+                return;
+            }
+
+            //修改生产者已发布序列号，消费者就可以进行消费
+            if (publishedSequence.compareAndSet(cur, sequence)) {
+                // 根据不同的等待策略唤醒消费线程
+                waitStrategy.signalAllWhenBlocking();
+                return;
+            }
         }
 
-        //修改生产者已发布序列号，消费者就可以进行消费
-        publishedSequence.set(sequence);
-        // 根据不同的等待策略唤醒消费线程
-        waitStrategy.signalAllWhenBlocking();
     }
 
     @Override
